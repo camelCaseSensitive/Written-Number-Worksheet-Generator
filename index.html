@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Standard and Word Form Worksheet Generator</title>
+  <style>
+    :root {
+      --ink: #172533;
+      --muted: #607080;
+      --navy: #173a57;
+      --blue: #2f739b;
+      --pale: #eaf4f9;
+      --paper: #ffffff;
+      --line: #b8c6d0;
+      --panel: #f4f7f9;
+      --shadow: 0 16px 42px rgba(20, 40, 55, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #dce5ea;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .controls {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 24px;
+      background: #fff;
+      border-right: 1px solid #cad5dc;
+    }
+
+    .brand {
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 5px 0 7px;
+      color: var(--navy);
+      font-size: 25px;
+      line-height: 1.08;
+    }
+
+    .subhead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .control-group {
+      margin: 0 0 18px;
+      padding: 0 0 18px;
+      border: 0;
+      border-bottom: 1px solid #e1e8ec;
+    }
+
+    .control-group legend {
+      width: 100%;
+      margin-bottom: 10px;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    label.field {
+      display: block;
+      margin: 0 0 11px;
+      color: #344553;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    label.field span {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      min-height: 39px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid #b8c6d0;
+      border-radius: 7px;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47, 115, 155, .13);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .check {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      margin: 9px 0;
+      color: #344553;
+      font-size: 12px;
+      line-height: 1.35;
+      cursor: pointer;
+    }
+
+    .check input { margin: 2px 0 0; accent-color: var(--blue); }
+
+    .buttons {
+      display: grid;
+      gap: 9px;
+    }
+
+    button {
+      min-height: 42px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .primary { color: #fff; background: var(--navy); }
+    .secondary { color: var(--navy); background: var(--pale); border-color: #b9d1df; }
+    button:hover { filter: brightness(.97); }
+
+    .seed-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .preview-wrap {
+      min-width: 0;
+      padding: 28px;
+      overflow: auto;
+    }
+
+    .preview-label {
+      max-width: 8.5in;
+      margin: 0 auto 10px;
+      color: #536675;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    #pages {
+      display: grid;
+      gap: 24px;
+      justify-content: center;
+    }
+
+    .sheet {
+      position: relative;
+      width: 8.5in;
+      min-height: 11in;
+      padding: .5in .55in .48in;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .sheet:last-child { break-after: auto; page-break-after: auto; }
+
+    .worksheet-header {
+      border-bottom: 2px solid var(--navy);
+      padding-bottom: 11px;
+    }
+
+    .worksheet-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .worksheet-title {
+      margin: 0;
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 23px;
+      line-height: 1.12;
+    }
+
+    .key-pill {
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      color: #fff;
+      background: var(--blue);
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .student-lines {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 30px;
+      margin-top: 17px;
+    }
+
+    .student-line {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .student-line::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid #8294a2;
+    }
+
+    .directions {
+      margin: 15px 0 17px;
+      padding: 10px 13px;
+      background: var(--pale);
+      border-left: 4px solid var(--blue);
+      border-radius: 3px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--columns, 2), minmax(0, 1fr));
+      column-gap: 34px;
+      row-gap: 0;
+    }
+
+    .problem {
+      min-width: 0;
+      min-height: var(--problem-height, 102px);
+      padding: 10px 2px 7px;
+      border-bottom: 1px solid #d7e0e5;
+      break-inside: avoid;
+    }
+
+    .prompt-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .number {
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.6;
+    }
+
+    .prompt {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 13px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .numeral-prompt {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .answer-lines {
+      margin: 10px 0 0 28px;
+    }
+
+    .answer-line {
+      height: 20px;
+      border-bottom: 1px solid #8fa0ad;
+    }
+
+    .key-answer {
+      margin: 6px 0 0 28px;
+      color: #1d4e6c;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .page-footer {
+      position: absolute;
+      right: .55in;
+      bottom: .22in;
+      left: .55in;
+      display: flex;
+      justify-content: space-between;
+      padding-top: 6px;
+      color: #71818d;
+      border-top: 1px solid #d5dee4;
+      font-size: 8px;
+      letter-spacing: .04em;
+    }
+
+    .empty-state {
+      width: 8.5in;
+      padding: 60px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    @media (max-width: 1050px) {
+      .app { grid-template-columns: 1fr; }
+      .controls { position: static; height: auto; border-right: 0; border-bottom: 1px solid #cad5dc; }
+      .preview-wrap { padding: 18px 8px; }
+      .sheet { transform-origin: top center; }
+    }
+
+    @page { size: letter; margin: 0; }
+
+    @media print {
+      body { background: #fff; }
+      .controls, .preview-label { display: none !important; }
+      .app { display: block; }
+      .preview-wrap { padding: 0; overflow: visible; }
+      #pages { display: block; }
+      .sheet {
+        margin: 0;
+        box-shadow: none;
+        width: 8.5in;
+        height: 11in;
+        min-height: 11in;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="controls" aria-label="Worksheet settings">
+      <div class="brand">
+        <div class="eyebrow">Worksheet generator</div>
+        <h1>Standard &amp; Word Form</h1>
+        <p class="subhead">Generate print-ready number-name practice with an optional answer key.</p>
+      </div>
+
+      <fieldset class="control-group">
+        <legend>Worksheet</legend>
+        <label class="field">
+          <span>Title</span>
+          <input id="title" type="text" value="Writing Numbers in Standard and Word Form">
+        </label>
+        <label class="field">
+          <span>Question type</span>
+          <select id="direction">
+            <option value="wordsToDigits">Words → numerals</option>
+            <option value="digitsToWords">Numerals → words</option>
+            <option value="mixedAlternating" selected>Mixed (alternating)</option>
+            <option value="mixedRandom">Mixed (random)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Number range</span>
+          <select id="difficulty">
+            <option value="hundreds">Up to hundreds (10–999)</option>
+            <option value="tenThousands" selected>Up to ten-thousands (1,000–99,999)</option>
+            <option value="hundredThousands">Up to hundred-thousands (10,000–999,999)</option>
+            <option value="millions">Up to millions (100,000–999,999,999)</option>
+            <option value="progressive">Progressive difficulty</option>
+          </select>
+        </label>
+        <div class="row">
+          <label class="field">
+            <span>Problems</span>
+            <input id="count" type="number" min="4" max="48" value="16">
+          </label>
+          <label class="field">
+            <span>Max per page</span>
+            <select id="perPage">
+              <option value="8">8</option>
+              <option value="12" selected>12</option>
+              <option value="16">16</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="control-group">
+        <legend>Word style</legend>
+        <label class="check"><input id="useAnd" type="checkbox" checked> <span>Use “and” after hundreds<br><small>Example: two hundred and thirty four</small></span></label>
+        <label class="check"><input id="hyphenate" type="checkbox"> <span>Hyphenate compound numbers<br><small>Example: thirty-four</small></span></label>
+        <label class="check"><input id="capitalize" type="checkbox" checked> <span>Capitalize the first word</span></label>
+        <label class="check"><input id="internalZeros" type="checkbox" checked> <span>Include some numbers with internal zeros</span></label>
+      </fieldset>
+
+      <fieldset class="control-group">
+        <legend>Page options</legend>
+        <label class="field">
+          <span>Layout</span>
+          <select id="columns">
+            <option value="1">One column</option>
+            <option value="2" selected>Two columns</option>
+          </select>
+        </label>
+        <label class="check"><input id="answerKey" type="checkbox" checked> <span>Include answer key after worksheet</span></label>
+        <label class="check"><input id="nameDate" type="checkbox" checked> <span>Include name and date lines</span></label>
+        <label class="field">
+          <span>Seed (reuse to recreate a worksheet)</span>
+          <input id="seed" type="text" value="">
+        </label>
+      </fieldset>
+
+      <div class="buttons">
+        <button class="primary" id="generate" type="button">Generate new worksheet</button>
+        <button class="secondary" id="rebuild" type="button">Rebuild using this seed</button>
+        <button class="secondary" id="print" type="button">Print / Save as PDF</button>
+      </div>
+      <div class="seed-note">The seed lets you reopen or share the same set of problems. “Generate new” creates a fresh seed.</div>
+    </aside>
+
+    <section class="preview-wrap" aria-live="polite">
+      <div class="preview-label">Print preview</div>
+      <div id="pages"></div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = id => document.getElementById(id);
+      const ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+      const teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+      const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+      const scales = [
+        [1_000_000_000, "billion"],
+        [1_000_000, "million"],
+        [1_000, "thousand"]
+      ];
+
+      function xmur3(text) {
+        let h = 1779033703 ^ text.length;
+        for (let i = 0; i < text.length; i++) {
+          h = Math.imul(h ^ text.charCodeAt(i), 3432918353);
+          h = h << 13 | h >>> 19;
+        }
+        return function () {
+          h = Math.imul(h ^ (h >>> 16), 2246822507);
+          h = Math.imul(h ^ (h >>> 13), 3266489909);
+          return (h ^= h >>> 16) >>> 0;
+        };
+      }
+
+      function mulberry32(seed) {
+        return function () {
+          let t = seed += 0x6D2B79F5;
+          t = Math.imul(t ^ t >>> 15, t | 1);
+          t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+      }
+
+      function rngFromSeed(seed) {
+        return mulberry32(xmur3(seed)());
+      }
+
+      function randomSeed() {
+        const a = new Uint32Array(2);
+        crypto.getRandomValues(a);
+        return `${a[0].toString(36)}-${a[1].toString(36)}`;
+      }
+
+      function capitalizeFirst(text) {
+        return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+      }
+
+      function underOneHundred(n, hyphenate) {
+        if (n < 10) return ones[n];
+        if (n < 20) return teens[n - 10];
+        const tenWord = tens[Math.floor(n / 10)];
+        const oneWord = ones[n % 10];
+        if (!oneWord) return tenWord;
+        return `${tenWord}${hyphenate ? "-" : " "}${oneWord}`;
+      }
+
+      function underOneThousand(n, options) {
+        if (n < 100) return underOneHundred(n, options.hyphenate);
+        const hundredWord = `${ones[Math.floor(n / 100)]} hundred`;
+        const rest = n % 100;
+        if (!rest) return hundredWord;
+        return `${hundredWord}${options.useAnd ? " and " : " "}${underOneHundred(rest, options.hyphenate)}`;
+      }
+
+      function numberToWords(n, options) {
+        if (!Number.isInteger(n) || n < 0 || n >= 1_000_000_000) {
+          throw new RangeError("Supported range is 0 through 999,999,999.");
+        }
+        if (n === 0) return options.capitalize ? "Zero" : "zero";
+        let remaining = n;
+        const parts = [];
+        for (const [value, name] of scales) {
+          if (remaining >= value) {
+            const group = Math.floor(remaining / value);
+            parts.push(`${underOneThousand(group, options)} ${name}`);
+            remaining %= value;
+          }
+        }
+        if (remaining) parts.push(underOneThousand(remaining, options));
+        const text = parts.join(" ");
+        return options.capitalize ? capitalizeFirst(text) : text;
+      }
+
+      function formatNumber(n) {
+        return n.toLocaleString("en-US");
+      }
+
+      function rangeForDifficulty(difficulty, index, count) {
+        if (difficulty === "hundreds") return [10, 999];
+        if (difficulty === "tenThousands") return [1_000, 99_999];
+        if (difficulty === "hundredThousands") return [10_000, 999_999];
+        if (difficulty === "millions") return [100_000, 999_999_999];
+        const progress = count <= 1 ? 1 : index / (count - 1);
+        if (progress < .25) return [10, 999];
+        if (progress < .50) return [1_000, 99_999];
+        if (progress < .75) return [10_000, 999_999];
+        return [1_000_000, 999_999_999];
+      }
+
+      function randomInt(rng, min, max) {
+        return Math.floor(rng() * (max - min + 1)) + min;
+      }
+
+      function makeInternalZeroNumber(rng, min, max) {
+        for (let attempt = 0; attempt < 40; attempt++) {
+          const n = randomInt(rng, min, max);
+          const chars = String(n).split("");
+          if (chars.length < 3) return n;
+          const eligible = [];
+          for (let i = 1; i < chars.length - 1; i++) eligible.push(i);
+          if (!eligible.length) return n;
+          chars[eligible[randomInt(rng, 0, eligible.length - 1)]] = "0";
+          const candidate = Number(chars.join(""));
+          if (candidate >= min && candidate <= max) return candidate;
+        }
+        return randomInt(rng, min, max);
+      }
+
+      function chooseDirection(mode, index, rng) {
+        if (mode === "wordsToDigits" || mode === "digitsToWords") return mode;
+        if (mode === "mixedAlternating") return index % 2 === 0 ? "wordsToDigits" : "digitsToWords";
+        return rng() < .5 ? "wordsToDigits" : "digitsToWords";
+      }
+
+      function readSettings() {
+        const count = Math.max(4, Math.min(48, Number($("count").value) || 16));
+        $("count").value = count;
+        return {
+          title: $("title").value.trim() || "Writing Numbers in Standard and Word Form",
+          direction: $("direction").value,
+          difficulty: $("difficulty").value,
+          count,
+          perPage: Number($("perPage").value),
+          columns: Number($("columns").value),
+          useAnd: $("useAnd").checked,
+          hyphenate: $("hyphenate").checked,
+          capitalize: $("capitalize").checked,
+          internalZeros: $("internalZeros").checked,
+          answerKey: $("answerKey").checked,
+          nameDate: $("nameDate").checked,
+          seed: $("seed").value.trim() || "classroom"
+        };
+      }
+
+      function buildProblems(settings) {
+        const rng = rngFromSeed(settings.seed);
+        const used = new Set();
+        const result = [];
+        for (let i = 0; i < settings.count; i++) {
+          const [min, max] = rangeForDifficulty(settings.difficulty, i, settings.count);
+          let value;
+          for (let attempt = 0; attempt < 100; attempt++) {
+            const shouldHaveZero = settings.internalZeros && i % 4 === 3;
+            value = shouldHaveZero ? makeInternalZeroNumber(rng, min, max) : randomInt(rng, min, max);
+            if (!used.has(value)) break;
+          }
+          used.add(value);
+          const direction = chooseDirection(settings.direction, i, rng);
+          const words = numberToWords(value, settings);
+          result.push({ value, words, direction });
+        }
+        return result;
+      }
+
+      function directionText(settings) {
+        if (settings.direction === "wordsToDigits") {
+          return "Write each written number as a numeral. Use commas to separate place values.";
+        }
+        if (settings.direction === "digitsToWords") {
+          return "Write each numeral in words.";
+        }
+        return "Write each number in the other form. Use commas when writing numerals.";
+      }
+
+      function element(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      }
+
+      function renderProblem(problem, number, isKey) {
+        const box = element("div", "problem");
+        const row = element("div", "prompt-row");
+        row.appendChild(element("div", "number", `${number}.`));
+        const prompt = element(
+          "div",
+          `prompt${problem.direction === "digitsToWords" ? " numeral-prompt" : ""}`,
+          problem.direction === "wordsToDigits" ? problem.words : formatNumber(problem.value)
+        );
+        row.appendChild(prompt);
+        box.appendChild(row);
+
+        if (isKey) {
+          const answer = problem.direction === "wordsToDigits" ? formatNumber(problem.value) : problem.words;
+          box.appendChild(element("div", "key-answer", answer));
+        } else {
+          const lines = element("div", "answer-lines");
+          const lineCount = problem.direction === "digitsToWords" ? 2 : 1;
+          for (let i = 0; i < lineCount; i++) lines.appendChild(element("div", "answer-line"));
+          box.appendChild(lines);
+        }
+        return box;
+      }
+
+      function makeSheet(settings, problems, pageIndex, pageTotal, startNumber, isKey) {
+        const sheet = element("article", "sheet");
+        sheet.style.setProperty("--columns", settings.columns);
+        const rows = Math.ceil(problems.length / settings.columns);
+        const available = settings.nameDate && !isKey ? 710 : 745;
+        const problemHeight = Math.max(82, Math.min(122, Math.floor(available / Math.max(rows, 1))));
+        sheet.style.setProperty("--problem-height", `${problemHeight}px`);
+
+        const header = element("header", "worksheet-header");
+        const titleRow = element("div", "worksheet-title-row");
+        titleRow.appendChild(element("h2", "worksheet-title", settings.title));
+        if (isKey) titleRow.appendChild(element("div", "key-pill", "Answer key"));
+        header.appendChild(titleRow);
+        if (settings.nameDate && !isKey) {
+          const student = element("div", "student-lines");
+          student.appendChild(element("div", "student-line", "Name"));
+          student.appendChild(element("div", "student-line", "Date"));
+          header.appendChild(student);
+        }
+        sheet.appendChild(header);
+
+        sheet.appendChild(element("div", "directions", isKey ? "Answers" : directionText(settings)));
+        const grid = element("div", "problem-grid");
+        problems.forEach((problem, i) => grid.appendChild(renderProblem(problem, startNumber + i, isKey)));
+        sheet.appendChild(grid);
+
+        const footer = element("footer", "page-footer");
+        footer.appendChild(element("span", "", isKey ? "Standard and Word Form - Answer Key" : "Standard and Word Form"));
+        footer.appendChild(element("span", "", `Page ${pageIndex} of ${pageTotal}`));
+        sheet.appendChild(footer);
+        return sheet;
+      }
+
+      function chunks(items, size) {
+        const result = [];
+        for (let i = 0; i < items.length; i += size) result.push(items.slice(i, i + size));
+        return result;
+      }
+
+      function render(settings) {
+        const pages = $("pages");
+        pages.replaceChildren();
+        const problems = buildProblems(settings);
+        const pageCapacity = settings.columns === 1
+          ? Math.min(settings.perPage, 8)
+          : settings.perPage;
+        const sets = chunks(problems, pageCapacity);
+        const total = sets.length * (settings.answerKey ? 2 : 1);
+        let pageNumber = 1;
+        let start = 1;
+
+        for (const set of sets) {
+          pages.appendChild(makeSheet(settings, set, pageNumber++, total, start, false));
+          start += set.length;
+        }
+
+        if (settings.answerKey) {
+          start = 1;
+          for (const set of sets) {
+            pages.appendChild(makeSheet(settings, set, pageNumber++, total, start, true));
+            start += set.length;
+          }
+        }
+      }
+
+      function generateNew() {
+        $("seed").value = randomSeed();
+        render(readSettings());
+      }
+
+      $("generate").addEventListener("click", generateNew);
+      $("rebuild").addEventListener("click", () => render(readSettings()));
+      $("print").addEventListener("click", () => window.print());
+
+      ["title", "direction", "difficulty", "count", "perPage", "columns", "useAnd", "hyphenate", "capitalize", "internalZeros", "answerKey", "nameDate"]
+        .forEach(id => $(id).addEventListener("change", () => render(readSettings())));
+
+      generateNew();
+    })();
+  </script>
+</body>
+</html>
